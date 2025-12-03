@@ -1,7 +1,0 @@
-# Railway backend configuration (Railpack)
-
-[build]
-root = "backend"
-
-[deploy]
-startCommand = "node server.js"
