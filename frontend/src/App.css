@@ -1,0 +1,94 @@
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}
+/* Idle popup basic styles - add to App.css */
+.idle-popup-overlay {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 9999;
+}
+
+.idle-popup {
+  width: min(520px, 92%);
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+  text-align: center;
+}
+
+.idle-popup h3 {
+  margin: 0 0 8px;
+  font-size: 1.2rem;
+}
+.idle-popup p {
+  margin: 0 0 18px;
+  color: #444;
+}
+
+.idle-popup-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 6px;
+}
+
+.btn {
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.btn-primary {
+  background: #2563eb;
+  color: white;
+}
+
+.btn-outline {
+  background: transparent;
+  border: 1px solid #ddd;
+  color: #111;
+}

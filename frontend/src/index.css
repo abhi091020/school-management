@@ -1,0 +1,135 @@
+/* ============================================================================
+   TAILWIND LAYERS
+============================================================================ */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================================
+   GLOBAL BASE STYLES
+============================================================================ */
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+}
+
+/* ============================================================================
+   MODAL & ELEMENT ANIMATIONS
+============================================================================ */
+
+@keyframes scale-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes fade-in {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.animate-scale-in {
+  animation: scale-in 0.2s ease-out;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.2s ease-out;
+}
+
+/* ============================================================================
+   CUSTOM LOADER + GENERIC SPIN (RETAINED)
+============================================================================ */
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.loader {
+  border-top-color: #3498db;
+  animation: spin 1s linear infinite;
+}
+
+/* ============================================================================
+   BLINK ANIMATION
+============================================================================ */
+
+@keyframes blink {
+  0%,
+  50%,
+  100% {
+    opacity: 1;
+  }
+  25%,
+  75% {
+    opacity: 0;
+  }
+}
+
+.animate-blink {
+  animation: blink 2.5s infinite;
+}
+
+/* ============================================================================
+   SMOOTH TRANSITIONS
+============================================================================ */
+.transition-all-smooth {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ============================================================================
+   ACCESSIBILITY FOCUS STYLES
+============================================================================ */
+*:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* ============================================================================
+   SCROLLBAR STYLING (Optional)
+============================================================================ */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* ============================================================================
+   SKELETON PULSE ANIMATION
+============================================================================ */
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}

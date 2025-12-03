@@ -1,0 +1,10 @@
+{
+  "watch": ["controllers", "routes", "models", "middlewares", "utils"],
+  "ext": "js,json",
+  "ignore": ["logs", "node_modules", ".env", "README.md"],
+  "delay": "2000",
+  "verbose": true,
+  "execMap": {
+    "js": "node"
+  }
+}
