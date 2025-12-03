@@ -1,6 +1,11 @@
-# The backend lives inside /backend
+# Backend service (Express API)
 [build]
 root = "backend"
 
 [deploy]
 startCommand = "node server.js"
+
+[service]
+# Tell Railway to expose port 5000 publicly
+port = 5000
+protocol = "http"
