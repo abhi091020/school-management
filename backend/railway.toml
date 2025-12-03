@@ -1,10 +1,10 @@
 [build]
-root = "."
+builder = "NIXPACKS"
+buildCommand = "npm install"
 
 [deploy]
 startCommand = "node server.js"
 
-[[services]]
-name = "backend"
-protocol = "http"
+[[ports]]
 port = 5000
+protocol = "http"
