@@ -1,0 +1,10 @@
+[build]
+root = "."
+
+[deploy]
+startCommand = "node server.js"
+
+[[services]]
+name = "backend"
+protocol = "http"
+port = 5000
