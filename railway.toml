@@ -1,5 +1,6 @@
+# The backend lives inside /backend
 [build]
-builder = "paketobuildpacks/builder:base"
+root = "backend"
 
 [deploy]
 startCommand = "node server.js"
