@@ -1,31 +1,27 @@
 // src/api/authService.js
 
-import axiosInstance from "./axiosInstance.js";
+import api from "./axiosInstance";
+
+// ============================================================================
+// Clean, standardized, enterprise-grade Auth Service
+// ============================================================================
 
 const authService = {
   /* ================= ADMIN LOGIN ================= */
   login: async (payload) => {
-    const res = await axiosInstance.post("/api/admin/auth/login", payload, {
-      withCredentials: true,
-    });
+    const res = await api.post("/api/admin/auth/login", payload);
     return res.data;
   },
 
   /* ================= GET AUTH USER ================= */
   getMe: async () => {
-    const res = await axiosInstance.get("/api/admin/auth/me", {
-      withCredentials: true,
-    });
+    const res = await api.get("/api/admin/auth/me");
     return res.data;
   },
 
   /* ================= LOGOUT ================= */
   logout: async () => {
-    const res = await axiosInstance.post(
-      "/api/admin/auth/logout",
-      {},
-      { withCredentials: true }
-    );
+    const res = await api.post("/api/admin/auth/logout");
     return res.data;
   },
 };
