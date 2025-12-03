@@ -3,9 +3,7 @@ import axios from "axios";
 // ============================================================================
 // 1. ENVIRONMENT-SAFE BASE URL (LOCAL + PRODUCTION)
 // ============================================================================
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ||
-  "https://school-management-m8c5.onrender.com";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 console.log(
   `%c[AXIOS] Base URL => ${API_BASE_URL}`,
@@ -18,19 +16,18 @@ console.log(
 let isRefreshing = false;
 let failedQueue = [];
 
-// Process queued requests after refresh
 const processQueue = (error, token = null) => {
   failedQueue.forEach((p) => (error ? p.reject(error) : p.resolve(token)));
   failedQueue = [];
 };
 
 // ============================================================================
-// 3. CREATE AXIOS INSTANCE (with optimized defaults)
+// 3. CREATE AXIOS INSTANCE
 // ============================================================================
 const axiosInstance = axios.create({
   baseURL: API_BASE_URL,
   withCredentials: true,
-  timeout: 15000, // Prevent hanging requests
+  timeout: 15000,
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",
@@ -38,7 +35,7 @@ const axiosInstance = axios.create({
 });
 
 // ============================================================================
-// 4. REQUEST INTERCEPTOR — Attach JWT Automatically
+// 4. REQUEST INTERCEPTOR — Attach JWT
 // ============================================================================
 axiosInstance.interceptors.request.use(
   (config) => {
@@ -55,11 +52,10 @@ axiosInstance.interceptors.request.use(
 );
 
 // ============================================================================
-// 5. RESPONSE INTERCEPTOR — Refresh Token Logic
+// 5. RESPONSE INTERCEPTOR — Token Refresh
 // ============================================================================
 axiosInstance.interceptors.response.use(
   (response) => {
-    // Backend may send a new token
     const newToken = response.headers["x-new-access-token"];
     const store = window.__APP_STORE__;
 
@@ -84,7 +80,6 @@ axiosInstance.interceptors.response.use(
     if (status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
-      // Queue request if refresh already running
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
@@ -97,11 +92,13 @@ axiosInstance.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const refreshURL = `${API_BASE_URL}/api/auth/refresh`;
+        const res = await axios.post(
+          `${API_BASE_URL}/api/auth/refresh`,
+          {},
+          { withCredentials: true }
+        );
 
-        const res = await axios.post(refreshURL, {}, { withCredentials: true });
-
-        const newToken = res.data?.accessToken || res.data?.token;
+        const newToken = res.data?.accessToken;
         const newUser = res.data?.user;
 
         if (!newToken) throw new Error("No access token returned");
@@ -114,12 +111,12 @@ axiosInstance.interceptors.response.use(
         processQueue(null, newToken);
 
         originalRequest.headers.Authorization = `Bearer ${newToken}`;
-
         return axiosInstance(originalRequest);
       } catch (err) {
         processQueue(err, null);
-
         store.dispatch({ type: "auth/logout" });
+
+        // IMPORTANT FIX
         window.location.assign("/auth/login");
 
         return Promise.reject(err);
@@ -140,7 +137,6 @@ axiosInstance.interceptors.response.use(
   }
 );
 
-// Debugging shortcut
-window.__AXIOS__ = axiosInstance;
+window.__AXIOS_INSTANCE__ = axiosInstance;
 
 export default axiosInstance;
