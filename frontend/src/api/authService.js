@@ -1,6 +1,6 @@
 // src/api/authService.js
 
-import axiosInstance from "./axiosInstance";
+import axiosInstance from "./axiosInstance.js";
 
 const authService = {
   /* ================= ADMIN LOGIN ================= */

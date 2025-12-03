@@ -1,14 +1,21 @@
-// frontend/utils/axiosInstance.js
-
 import axios from "axios";
 
-// Global flags
+// ============================================================================
+// PRODUCTION-SAFE BASE URL
+// ============================================================================
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ||
+  "https://school-management-production-0432.up.railway.app";
+
+console.log("%c[AXIOS] Base URL = " + API_BASE_URL, "color: green;");
+
+// Global refresh state
 let isRefreshing = false;
 let failedQueue = [];
 
-/**************************************************************
- * PROCESS QUEUED REQUESTS DURING REFRESH
- **************************************************************/
+// ============================================================================
+// QUEUE PROCESSOR FOR REFRESH
+// ============================================================================
 const processQueue = (error, token = null) => {
   failedQueue.forEach((p) => {
     if (error) p.reject(error);
@@ -17,20 +24,20 @@ const processQueue = (error, token = null) => {
   failedQueue = [];
 };
 
-/**************************************************************
- * CREATE AXIOS INSTANCE
- **************************************************************/
+// ============================================================================
+// CREATE AXIOS INSTANCE
+// ============================================================================
 const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
+  baseURL: API_BASE_URL,
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-/**************************************************************
- * REQUEST INTERCEPTOR — Attach JWT if available
- **************************************************************/
+// ============================================================================
+// REQUEST INTERCEPTOR — Attach JWT Automatically
+// ============================================================================
 axiosInstance.interceptors.request.use(
   (config) => {
     const store = window.__APP_STORE__;
@@ -48,12 +55,11 @@ axiosInstance.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-/**************************************************************
- * RESPONSE INTERCEPTOR — Auto Refresh Logic
- **************************************************************/
+// ============================================================================
+// RESPONSE INTERCEPTOR — Auto Refresh Token
+// ============================================================================
 axiosInstance.interceptors.response.use(
   (response) => {
-    // Backend may send token rotation header
     const newToken = response.headers["x-new-access-token"];
     const store = window.__APP_STORE__;
 
@@ -72,15 +78,16 @@ axiosInstance.interceptors.response.use(
     const originalRequest = error.config;
     const status = error.response.status;
 
+    // If store or request missing — don't retry
     if (!store || !originalRequest) return Promise.reject(error);
 
-    /**************************************************************
-     * 1. ACCESS TOKEN EXPIRED → TRY REFRESH
-     **************************************************************/
+    // ========================================================================
+    // TOKEN EXPIRED → REFRESH TOKEN FLOW
+    // ========================================================================
     if (status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
-      // If already refreshing → queue the request
+      // Queue while refreshing
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
@@ -93,37 +100,28 @@ axiosInstance.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const refreshURL = `${
-          import.meta.env.VITE_API_BASE_URL
-        }/api/auth/refresh`;
+        const refreshURL = `${API_BASE_URL}/api/auth/refresh`;
 
-        // PUBLIC + ADMIN use same refresh flow (server auto-detects role)
         const res = await axios.post(refreshURL, {}, { withCredentials: true });
 
-        // Backend returns { accessToken, token, user }
-        const newToken = res.data?.accessToken || res.data?.token || null;
+        const newToken = res.data?.accessToken || res.data?.token;
+        const newUser = res.data?.user;
 
-        const newUser = res.data?.user || null;
+        if (!newToken)
+          throw new Error("Refresh token did not return new token");
 
-        if (!newToken) throw new Error("Refresh did not provide new token");
-
-        // Update Redux store
         store.dispatch({ type: "auth/setToken", payload: newToken });
         if (newUser) store.dispatch({ type: "auth/setUser", payload: newUser });
 
-        // Set axios defaults
         axiosInstance.defaults.headers.common.Authorization = `Bearer ${newToken}`;
 
-        // Resume queued requests
         processQueue(null, newToken);
 
-        // Retry original request
         originalRequest.headers.Authorization = `Bearer ${newToken}`;
         return axiosInstance(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError, null);
 
-        // Hard logout on refresh failure
         store.dispatch({ type: "auth/logout" });
         window.location.href = "/login";
 
@@ -133,11 +131,9 @@ axiosInstance.interceptors.response.use(
       }
     }
 
-    /**************************************************************
-     * 2. SESSION INVALID / FORCE LOGOUT
-     *    403 → refresh token revoked
-     *    419 → session expired
-     **************************************************************/
+    // ========================================================================
+    // SESSION INVALID (403/419) → FORCE LOGOUT
+    // ========================================================================
     if (status === 403 || status === 419) {
       store.dispatch({ type: "auth/logout" });
       window.location.href = "/login";
@@ -147,9 +143,7 @@ axiosInstance.interceptors.response.use(
   }
 );
 
-/**************************************************************
- * DEBUG ACCESS (Development Only)
- **************************************************************/
+// Debug
 window.__AXIOS_INSTANCE__ = axiosInstance;
 
 export default axiosInstance;
