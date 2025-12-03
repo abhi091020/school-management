@@ -1,10 +1,7 @@
+# Railway backend configuration (Railpack)
+
 [build]
-builder = "NIXPACKS"
-buildCommand = "npm install"
+root = "backend"
 
 [deploy]
 startCommand = "node server.js"
-
-[[ports]]
-port = 5000
-protocol = "http"
