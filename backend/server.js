@@ -51,7 +51,75 @@ function attachModelQueryMiddleware(req, res, next) {
 const app = baseApp;
 
 /**************************************************************
- * SAFE ROUTE LOADER WITH LOGGING (Railway Debug-Friendly)
+ * ENTERPRISE-GRADE CORS CONFIG
+ **************************************************************/
+const allowedOrigins = [
+  process.env.CLIENT_URL, // Production frontend
+  "http://localhost:5173", // Local Vite frontend
+  /\.vercel\.app$/, // All Vercel preview deployments
+  /\.onrender\.com$/, // If frontend ever runs on Render
+];
+
+const corsOptions = {
+  credentials: true,
+  origin: function (origin, callback) {
+    // Allow non-browser requests (curl, Postman)
+    if (!origin) return callback(null, true);
+
+    const allowed = allowedOrigins.some((entry) => {
+      if (!entry) return false;
+      if (typeof entry === "string") return entry === origin;
+      if (entry instanceof RegExp) return entry.test(origin);
+      return false;
+    });
+
+    if (allowed) {
+      callback(null, true);
+    } else {
+      console.log("❌ CORS BLOCKED:", origin);
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+};
+
+/**************************************************************
+ * INITIALIZE MIDDLEWARE
+ **************************************************************/
+function initializeMiddleware() {
+  logger.info("⚙️ Initializing middleware...");
+
+  app.set("trust proxy", 1);
+  app.use(cookieParser());
+
+  // Body parsing
+  app.use(express.json({ limit: "10mb" }));
+  app.use(express.urlencoded({ extended: true }));
+
+  // <<< ENTERPRISE CORS >>>
+  app.use(cors(corsOptions));
+
+  // Security hardening (adjusted for API usage)
+  app.use(
+    helmet({
+      crossOriginResourcePolicy: false,
+      contentSecurityPolicy: false,
+      crossOriginEmbedderPolicy: false,
+    })
+  );
+
+  // Prevent HTTP parameter pollution
+  app.use(hpp());
+
+  app.use(parseQueryMiddleware);
+  app.use(attachModelQueryMiddleware);
+
+  if (process.env.NODE_ENV !== "production") {
+    app.use(morgan("dev"));
+  }
+}
+
+/**************************************************************
+ * SAFE ROUTE LOADER WITH LOGGING
  **************************************************************/
 async function safeLoadRoute(relativePath) {
   logger.info(`🔍 Loading route: ${relativePath}`);
@@ -75,42 +143,6 @@ async function safeLoadRoute(relativePath) {
       `❌ Failed to load route: ${relativePath}\nError: ${err.message}\nStack: ${err.stack}`
     );
     return null;
-  }
-}
-
-/**************************************************************
- * INITIALIZE MIDDLEWARE
- **************************************************************/
-function initializeMiddleware() {
-  logger.info("⚙️ Initializing middleware...");
-
-  app.set("trust proxy", 1);
-  app.use(cookieParser());
-
-  app.use(express.json({ limit: "10mb" }));
-  app.use(express.urlencoded({ extended: true }));
-
-  app.use(
-    cors({
-      origin: process.env.CLIENT_URL || "http://localhost:5173",
-      credentials: true,
-    })
-  );
-
-  app.use(
-    helmet({
-      crossOriginResourcePolicy: false,
-      contentSecurityPolicy: false,
-    })
-  );
-
-  app.use(hpp());
-
-  app.use(parseQueryMiddleware);
-  app.use(attachModelQueryMiddleware);
-
-  if (process.env.NODE_ENV !== "production") {
-    app.use(morgan("dev"));
   }
 }
 
